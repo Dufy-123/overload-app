@@ -186,6 +186,7 @@ let STATE = {
   analyzeError: null,
   analyzeImage: null, // {base64, mime, previewUrl}
   editingFoodId: null,
+  foodViewDate: null, // date string being viewed/logged on the Log Food tab; defaults to today
 };
 
 const DEFAULT_PROFILE = {
@@ -227,7 +228,13 @@ const MET_LABELS = {
   circuit: 'Circuit / conditioning (minimal rest, continuous)'
 };
 
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+function todayStr(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function fmt(n){ return Math.round(n).toLocaleString(); }
 function estimateWorkoutCalories(weightLbs, met, minutes){
@@ -356,7 +363,7 @@ function render(){
     <main id="main"></main>
   `;
   document.querySelectorAll('.navitem').forEach(el=>{
-    el.addEventListener('click', ()=>{ STATE.tab = el.dataset.tab; STATE.analyzeResult=null; STATE.analyzeError=null; STATE.editingFoodId=null; renderMain(); attachNavHighlight(); });
+    el.addEventListener('click', ()=>{ STATE.tab = el.dataset.tab; STATE.analyzeResult=null; STATE.analyzeError=null; STATE.editingFoodId=null; STATE.foodViewDate=null; renderMain(); attachNavHighlight(); });
   });
   renderMain();
 }
@@ -462,14 +469,16 @@ function macroRow(label, val, target, color){
 
 /* ===================== FOOD ===================== */
 function viewFood(){
-  const t = todayStr();
-  const entries = STATE.foodLogs.filter(e=>e.date===t).slice().reverse();
+  if(!STATE.foodViewDate) STATE.foodViewDate = todayStr();
+  const viewDate = STATE.foodViewDate;
+  const isToday = viewDate === todayStr();
+  const entries = STATE.foodLogs.filter(e=>e.date===viewDate).slice().reverse();
   return `
     <h1 class="pagehead">Log Food</h1>
     <p class="pagesub">Describe what you ate, add a photo, or both — then review the estimate before saving.</p>
 
     <div class="panel">
-      <div class="panel-title">New entry</div>
+      <div class="panel-title">New entry${isToday ? '' : ' — for ' + viewDate}</div>
       <div class="fieldrow">
         <label for="foodDesc">Description &amp; quantity</label>
         <textarea id="foodDesc" placeholder="e.g. 8oz grilled chicken breast, 1.5 cups white rice, 1 tbsp olive oil"></textarea>
@@ -487,8 +496,14 @@ function viewFood(){
     </div>
 
     <div class="panel">
-      <div class="panel-title">Today's log</div>
-      ${entries.length ? entries.map(e=>foodEntryRow(e)).join('') : '<div class="empty">No entries yet today.</div>'}
+      <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <span>${isToday ? "Today's log" : 'Log for ' + viewDate}</span>
+        <span style="display:flex; align-items:center; gap:8px;">
+          <input type="date" id="foodViewDate" value="${viewDate}" style="width:auto;">
+          ${isToday ? '' : '<button class="small" id="btnJumpToday">Today</button>'}
+        </span>
+      </div>
+      ${entries.length ? entries.map(e=>foodEntryRow(e)).join('') : '<div class="empty">No entries logged for this day.</div>'}
       ${entries.length ? `<div class="btnrow" style="margin-top:10px;"><span class="mono" style="font-size:12px; color:var(--text-dim);">Totals: ${fmt(entries.reduce((a,e)=>a+e.totals.calories,0))} kcal</span></div>` : ''}
     </div>
   `;
@@ -500,6 +515,9 @@ function foodEntryRow(e){
         <div class="logentry-name" style="margin-bottom:8px;">${escapeHtml(e.label)} <span class="logentry-meta">(editing)</span></div>
         <div class="fieldgrid" style="margin-bottom:4px;">
           <div class="fieldrow"><label>Label</label><input type="text" id="editLabel-${e.id}" value="${escapeHtml(e.label)}"></div>
+          <div class="fieldrow"><label>Date</label><input type="date" id="editDate-${e.id}" value="${e.date}"></div>
+        </div>
+        <div class="fieldgrid" style="margin-bottom:4px;">
           <div class="fieldrow"><label>Calories</label><input type="number" id="editCal-${e.id}" value="${Math.round(e.totals.calories)}"></div>
         </div>
         <div class="fieldgrid3">
@@ -548,6 +566,7 @@ function bindFoodEvents(){
       const entry = STATE.foodLogs.find(f=>f.id===id);
       if(!entry) return;
       entry.label = document.getElementById('editLabel-'+id).value || entry.label;
+      entry.date = document.getElementById('editDate-'+id).value || entry.date;
       entry.totals = {
         calories: Number(document.getElementById('editCal-'+id).value)||0,
         protein_g: Number(document.getElementById('editP-'+id).value)||0,
@@ -559,6 +578,20 @@ function bindFoodEvents(){
       renderMain();
     });
   });
+  const viewDateEl = document.getElementById('foodViewDate');
+  if(viewDateEl){
+    viewDateEl.addEventListener('change', ()=>{
+      STATE.foodViewDate = viewDateEl.value || todayStr();
+      renderMain();
+    });
+  }
+  const jumpTodayBtn = document.getElementById('btnJumpToday');
+  if(jumpTodayBtn){
+    jumpTodayBtn.addEventListener('click', ()=>{
+      STATE.foodViewDate = todayStr();
+      renderMain();
+    });
+  }
   const photoInput = document.getElementById('foodPhoto');
   if(photoInput){
     photoInput.addEventListener('change', async (ev)=>{
@@ -645,7 +678,7 @@ function renderAnalyzeArea(){
 
 async function commitFoodEntry(){
   const entry = {
-    id: uid(), date: todayStr(),
+    id: uid(), date: STATE.foodViewDate || todayStr(),
     time: new Date().toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}),
     label: document.getElementById('revLabel').value || 'Food entry',
     totals: {
