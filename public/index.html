@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OVERLOAD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#121417;
+    --panel:#1a1d22;
+    --panel-alt:#20242a;
+    --border:#2b3038;
+    --text:#eceef1;
+    --text-dim:#888e98;
+    --text-faint:#5a606a;
+    --protein:#e0473f;   /* 25kg red plate */
+    --carbs:#e8b93d;     /* 15kg yellow plate */
+    --fat:#3f9e5e;       /* 10kg green plate */
+    --cal:#3f7fd0;       /* 20kg blue plate */
+    --trend:#9d7fe0;
+    --danger:#e0473f;
+    --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
+  .display{font-family:'Bebas Neue',sans-serif; letter-spacing:0.02em;}
+  .mono{font-family:'Roboto Mono',monospace;}
+  #app{display:flex; min-height:100vh;}
+
+  /* ---- Nav ---- */
+  nav{
+    width:180px; flex-shrink:0; background:var(--panel);
+    border-right:1px solid var(--border);
+    display:flex; flex-direction:column;
+    position:sticky; top:0; height:100vh;
+  }
+  .brand{padding:22px 18px 14px; border-bottom:1px solid var(--border);}
+  .brand .display{font-size:28px; line-height:1; color:var(--text);}
+  .brand .sub{font-size:11px; color:var(--text-dim); margin-top:2px; letter-spacing:0.03em;}
+  .navlist{flex:1; padding:10px 0;}
+  .navitem{
+    display:flex; align-items:center; gap:10px;
+    padding:13px 18px; cursor:pointer; font-size:14px; font-weight:500;
+    color:var(--text-dim); border-left:3px solid transparent;
+    transition:background .12s, color .12s;
+  }
+  .navitem:hover{background:var(--panel-alt); color:var(--text);}
+  .navitem.active{color:var(--text); background:var(--panel-alt); border-left-color:var(--cal);}
+  .navitem .plate{width:8px; height:8px; border-radius:1px; flex-shrink:0;}
+  .navfoot{padding:14px 18px; border-top:1px solid var(--border); font-size:11px; color:var(--text-faint);}
+
+  main{flex:1; padding:28px 34px 60px; max-width:920px;}
+  h1.pagehead{font-family:'Bebas Neue'; font-size:34px; letter-spacing:0.02em; margin:0 0 4px;}
+  .pagesub{color:var(--text-dim); font-size:13px; margin:0 0 26px;}
+
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px; margin-bottom:18px;
+  }
+  .panel-title{font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dim); margin:0 0 16px; font-weight:600;}
+
+  /* ---- Macro bars ---- */
+  .macrorow{margin-bottom:16px;}
+  .macrorow:last-child{margin-bottom:0;}
+  .macrorow-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
+  .macrorow-label{font-size:13px; font-weight:600; color:var(--text);}
+  .macrorow-nums{font-size:13px; color:var(--text-dim);}
+  .macrorow-nums b{color:var(--text); font-weight:600;}
+  .bartrack{height:10px; background:var(--panel-alt); border:1px solid var(--border); border-radius:2px; overflow:hidden; position:relative;}
+  .barfill{height:100%; border-radius:1px; transition:width .3s ease;}
+
+  .bigstat{display:flex; align-items:baseline; gap:10px;}
+  .bigstat .num{font-family:'Bebas Neue'; font-size:52px; line-height:1;}
+  .bigstat .unit{font-size:14px; color:var(--text-dim);}
+
+  .statgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:14px; margin-top:16px;}
+  .statbox{background:var(--panel-alt); border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px;}
+  .statbox .k{font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;}
+  .statbox .v{font-family:'Bebas Neue'; font-size:24px;}
+
+  /* ---- Forms ---- */
+  label{display:block; font-size:12px; color:var(--text-dim); margin-bottom:5px; font-weight:500;}
+  input[type=text], input[type=number], input[type=date], select, textarea{
+    width:100%; background:var(--panel-alt); border:1px solid var(--border); color:var(--text);
+    padding:9px 10px; border-radius:var(--radius); font-size:14px; font-family:inherit;
+  }
+  textarea{resize:vertical; min-height:64px;}
+  input:focus, select:focus, textarea:focus{outline:1px solid var(--cal); border-color:var(--cal);}
+  .fieldrow{margin-bottom:14px;}
+  .fieldgrid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .fieldgrid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+
+  button{
+    font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;
+    border-radius:var(--radius); border:1px solid var(--border); padding:10px 16px;
+    background:var(--panel-alt); color:var(--text); transition:background .12s, border-color .12s;
+  }
+  button:hover{background:#282d34;}
+  button.primary{background:var(--cal); border-color:var(--cal); color:#fff;}
+  button.primary:hover{background:#3670bb;}
+  button.danger{color:var(--danger); border-color:#3a2a29;}
+  button.danger:hover{background:#2a1c1c;}
+  button:disabled{opacity:0.5; cursor:default;}
+  button.small{padding:6px 11px; font-size:12px;}
+  .btnrow{display:flex; gap:10px; margin-top:6px; flex-wrap:wrap;}
+
+  .toggle{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim); cursor:pointer; user-select:none;}
+  .toggle input{width:auto;}
+
+  /* ---- Lists ---- */
+  .logentry{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:11px 0; border-bottom:1px solid var(--border); gap:12px;
+  }
+  .logentry:last-child{border-bottom:none;}
+  .logentry-main{flex:1; min-width:0;}
+  .logentry-name{font-size:14px; font-weight:500; color:var(--text);}
+  .logentry-meta{font-size:12px; color:var(--text-dim); margin-top:2px;}
+  .logentry-macros{display:flex; gap:10px; font-size:12px; font-family:'Roboto Mono'; flex-shrink:0;}
+  .m-p{color:var(--protein);} .m-c{color:var(--carbs);} .m-f{color:var(--fat);} .m-k{color:var(--text-dim);}
+  .empty{color:var(--text-faint); font-size:13px; padding:14px 0; text-align:center;}
+
+  /* ---- Analyze result card ---- */
+  .analyzebox{border:1px dashed var(--border); border-radius:var(--radius); padding:16px; margin-top:14px;}
+  .itemline{font-size:13px; color:var(--text-dim); padding:4px 0; border-bottom:1px solid var(--border);}
+  .itemline:last-of-type{border-bottom:none;}
+  .loading{display:flex; align-items:center; gap:10px; color:var(--text-dim); font-size:13px; padding:10px 0;}
+  .spinner{width:14px; height:14px; border:2px solid var(--border); border-top-color:var(--cal); border-radius:50%; animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .errbox{color:var(--danger); font-size:13px; background:#241a1a; border:1px solid #3a2a29; padding:10px 12px; border-radius:var(--radius); margin-top:10px;}
+
+  .notebox{font-size:12.5px; color:var(--text-dim); background:var(--panel-alt); border-left:2px solid var(--carbs); padding:10px 13px; border-radius:2px; line-height:1.5; margin-bottom:18px;}
+
+  svg.chart{width:100%; height:160px; display:block;}
+  .exrow{border:1px solid var(--border); border-radius:var(--radius); padding:12px; margin-bottom:10px; background:var(--panel-alt);}
+  .exrow-head{display:flex; justify-content:space-between; gap:10px; margin-bottom:8px;}
+
+  ::placeholder{color:var(--text-faint);}
+  .imgpreview{max-width:180px; border-radius:var(--radius); border:1px solid var(--border); display:block; margin-top:8px;}
+
+  table.trendtable{width:100%; border-collapse:collapse; font-size:12px;}
+  table.trendtable th{padding:6px 10px 6px 0; text-align:left; color:var(--text-dim); border-bottom:1px solid var(--border); font-weight:600;}
+  table.trendtable td{padding:9px 10px 9px 0; border-bottom:1px solid var(--border); white-space:nowrap;}
+  .trendwrap{overflow-x:auto;}
+
+  @media (max-width:720px){
+    #app{flex-direction:column;}
+    nav{width:100%; height:auto; position:relative; flex-direction:row; overflow-x:auto;}
+    .brand{display:none;}
+    .navlist{display:flex; padding:0;}
+    .navitem{border-left:none; border-bottom:3px solid transparent; white-space:nowrap;}
+    .navitem.active{border-bottom-color:var(--cal);}
+    .navfoot{display:none;}
+    main{padding:18px 16px 50px;}
+    .fieldgrid, .fieldgrid3{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ===================== LOCAL STORAGE ADAPTER ===================== */
+const storage = {
+  async get(key){
+    try{ const v = localStorage.getItem('overload:'+key); return v===null ? null : {value:v}; }
+    catch(e){ return null; }
+  },
+  async set(key, value){
+    try{ localStorage.setItem('overload:'+key, value); }catch(e){ /* storage unavailable / full */ }
+  }
+};
+
+/* ===================== STATE ===================== */
+let STATE = {
+  tab: 'dashboard',
+  profile: null,
+  foodLogs: [],
+  weightLogs: [],
+  workoutLogs: [],
+  loaded: false,
+  analyzeResult: null,
+  analyzeLoading: false,
+  analyzeError: null,
+  analyzeImage: null, // {base64, mime, previewUrl}
+  editingFoodId: null,
+};
+
+const DEFAULT_PROFILE = {
+  sex: 'male', age: 25, heightFt: 5, heightIn: 10, weightLbs: 185,
+  activity: 'moderate', experience: 'advanced', phase: 'bulk',
+  surplusPct: 7.5, deficitPct: 20, proteinPerLb: 0.85, fatPct: 25
+};
+
+const ACTIVITY_MULT = {
+  sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, veryactive: 1.9
+};
+const ACTIVITY_LABEL = {
+  sedentary: 'Sedentary (desk job, little exercise outside lifting)',
+  light: 'Light (on your feet some of the day)',
+  moderate: 'Moderate (on your feet most of the day / active job)',
+  active: 'Active (physical job)',
+  veryactive: 'Very active (physical job + high daily movement)'
+};
+
+/* Rate-of-gain bands (% bodyweight per month) — beginner/intermediate figures are
+   Jeff Nippard's, from "How To Bulk Like A Pro". The advanced band is not a number
+   he stated directly; it's a reasonable extrapolation of his framework for
+   longer-trained lifters, so treat it as an estimate. */
+const RATE_BANDS = {
+  beginner: { min: 1, max: 2, label: 'Beginner (< 1yr training)' },
+  intermediate: { min: 0.5, max: 1, label: 'Intermediate (1–3yrs)' },
+  advanced: { min: 0.25, max: 0.5, label: 'Advanced (3+ yrs, estimated)' }
+};
+/* Mini-cut target: ~20-25% deficit, aiming for roughly 0.5-1% bodyweight loss/week
+   over 4-6 weeks, per Nippard's approach to trimming fat gained on a long bulk. */
+const MINICUT_BAND = { min: 0.5, max: 1 };
+
+/* MET values (Compendium of Physical Activities) used to estimate calories burned
+   from resistance-training sessions when the user hasn't overridden the number. */
+const MET_VALUES = { moderate: 3.5, vigorous: 6.0, circuit: 8.0 };
+const MET_LABELS = {
+  moderate: 'Moderate lifting (steady pace, rest between sets)',
+  vigorous: 'Vigorous lifting (heavy effort, short rest)',
+  circuit: 'Circuit / conditioning (minimal rest, continuous)'
+};
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function fmt(n){ return Math.round(n).toLocaleString(); }
+function estimateWorkoutCalories(weightLbs, met, minutes){
+  const kg = weightLbs * 0.453592;
+  return (met * 3.5 * kg / 200) * minutes;
+}
+
+/* ===================== STORAGE ===================== */
+async function loadAll(){
+  const [p, f, w, wo] = await Promise.all([
+    safeGet('profile'), safeGet('foodLogs'), safeGet('weightLogs'), safeGet('workoutLogs')
+  ]);
+  STATE.profile = p ? {...DEFAULT_PROFILE, ...JSON.parse(p)} : {...DEFAULT_PROFILE};
+  // migrate old flat-kcal-surplus / g-per-lb-fat profiles to the new % based fields
+  if(STATE.profile.surplusPct === undefined && STATE.profile.surplus !== undefined){
+    const kg = STATE.profile.weightLbs*0.453592, cm=(STATE.profile.heightFt*12+STATE.profile.heightIn)*2.54;
+    let bmr = 10*kg+6.25*cm-5*STATE.profile.age + (STATE.profile.sex==='male'?5:-161);
+    const tdee = bmr*ACTIVITY_MULT[STATE.profile.activity];
+    STATE.profile.surplusPct = Math.round((STATE.profile.surplus/tdee)*1000)/10;
+  }
+  if(STATE.profile.fatPct === undefined && STATE.profile.fatPerLb !== undefined){
+    STATE.profile.fatPct = 25; // fall back to Nippard's mid-range default
+  }
+  await saveProfile();
+  STATE.foodLogs = f ? JSON.parse(f) : [];
+  STATE.weightLogs = w ? JSON.parse(w) : [];
+  STATE.workoutLogs = wo ? JSON.parse(wo) : [];
+  STATE.loaded = true;
+}
+async function safeGet(key){
+  try{ const r = await storage.get(key); return r ? r.value : null; }
+  catch(e){ return null; }
+}
+async function saveProfile(){ await storage.set('profile', JSON.stringify(STATE.profile)); }
+async function saveFoodLogs(){ await storage.set('foodLogs', JSON.stringify(STATE.foodLogs)); }
+async function saveWeightLogs(){ await storage.set('weightLogs', JSON.stringify(STATE.weightLogs)); }
+async function saveWorkoutLogs(){ await storage.set('workoutLogs', JSON.stringify(STATE.workoutLogs)); }
+
+/* ===================== TARGET CALCS ===================== */
+function computeTargets(profile){
+  const kg = profile.weightLbs * 0.453592;
+  const cm = (profile.heightFt*12 + profile.heightIn) * 2.54;
+  let bmr = 10*kg + 6.25*cm - 5*profile.age;
+  bmr += (profile.sex === 'male') ? 5 : -161;
+  const tdee = bmr * ACTIVITY_MULT[profile.activity];
+  const isMinicut = profile.phase === 'minicut';
+  const calories = isMinicut
+    ? tdee * (1 - Number(profile.deficitPct)/100)
+    : tdee * (1 + Number(profile.surplusPct)/100);
+  const proteinG = profile.weightLbs * Number(profile.proteinPerLb);
+  const fatG = (calories * Number(profile.fatPct)/100) / 9;
+  const remaining = calories - proteinG*4 - fatG*9;
+  const carbsG = Math.max(0, remaining/4);
+  return { bmr, tdee, calories, proteinG, fatG, carbsG, isMinicut };
+}
+
+/* Actual rate of weight change from logged entries, using the most recent ~35-day
+   window (or everything available if the log is shorter). */
+function computeRateOfGain(){
+  const logs = STATE.weightLogs.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  if(logs.length < 2) return null;
+  const last = logs[logs.length-1];
+  const lastDate = new Date(last.date);
+  let ref = logs[0];
+  for(const l of logs){
+    const daysAgo = (lastDate - new Date(l.date)) / 86400000;
+    if(daysAgo <= 35){ ref = l; break; }
+  }
+  const days = (lastDate - new Date(ref.date)) / 86400000;
+  if(days < 6) return null;
+  const pctChange = ((last.weightLbs - ref.weightLbs) / ref.weightLbs) * 100;
+  return {
+    pctPerMonth: pctChange * (30/days),
+    pctPerWeek: pctChange * (7/days),
+    days: Math.round(days), from: ref, to: last
+  };
+}
+function rateStatus(rate, profile){
+  if(profile.phase === 'minicut'){
+    const band = MINICUT_BAND;
+    const weeklyLoss = -rate.pctPerWeek; // expect negative pctPerWeek during a cut
+    if(weeklyLoss < band.min) return { tone:'low', text:`Losing ${weeklyLoss.toFixed(2)}%/week — slower than the ${band.min}–${band.max}%/week mini-cut target. Consider a slightly larger deficit.` };
+    if(weeklyLoss > band.max) return { tone:'high', text:`Losing ${weeklyLoss.toFixed(2)}%/week — faster than the ${band.min}–${band.max}%/week target, which risks muscle loss. Consider easing the deficit.` };
+    return { tone:'ok', text:`Losing ${weeklyLoss.toFixed(2)}%/week — right in the ${band.min}–${band.max}%/week mini-cut range.` };
+  }
+  const band = RATE_BANDS[profile.experience];
+  if(rate.pctPerMonth < band.min) return { tone:'low', text:`Gaining ${rate.pctPerMonth.toFixed(2)}%/month — below the ${band.min}–${band.max}% target for ${profile.experience} lifters. Consider bumping the surplus 1–2%.` };
+  if(rate.pctPerMonth > band.max) return { tone:'high', text:`Gaining ${rate.pctPerMonth.toFixed(2)}%/month — above the ${band.min}–${band.max}% target, which likely means more fat gain than necessary. Consider trimming the surplus 1–2%.` };
+  return { tone:'ok', text:`Gaining ${rate.pctPerMonth.toFixed(2)}%/month — right in the ${band.min}–${band.max}% target range for ${profile.experience} lifters.` };
+}
+
+function todaysTotals(){
+  const t = todayStr();
+  const entries = STATE.foodLogs.filter(e => e.date === t);
+  return entries.reduce((acc,e)=>({
+    calories: acc.calories + e.totals.calories,
+    protein: acc.protein + e.totals.protein_g,
+    carbs: acc.carbs + e.totals.carbs_g,
+    fat: acc.fat + e.totals.fat_g
+  }), {calories:0, protein:0, carbs:0, fat:0});
+}
+function todaysCaloriesBurned(){
+  const t = todayStr();
+  return STATE.workoutLogs.filter(w=>w.date===t).reduce((a,w)=>a+(w.caloriesBurned||0),0);
+}
+
+/* ===================== RENDER SHELL ===================== */
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <nav>
+      <div class="brand">
+        <div class="display">OVERLOAD</div>
+        <div class="sub">Bulk tracking log</div>
+      </div>
+      <div class="navlist">
+        ${navItem('dashboard','Dashboard','var(--cal)')}
+        ${navItem('food','Log Food','var(--protein)')}
+        ${navItem('weight','Weight','var(--carbs)')}
+        ${navItem('workouts','Workouts','var(--fat)')}
+        ${navItem('trends','Trends','var(--trend)')}
+        ${navItem('settings','Settings','#7a8090')}
+      </div>
+      <div class="navfoot mono">${todayStr()}</div>
+    </nav>
+    <main id="main"></main>
+  `;
+  document.querySelectorAll('.navitem').forEach(el=>{
+    el.addEventListener('click', ()=>{ STATE.tab = el.dataset.tab; STATE.analyzeResult=null; STATE.analyzeError=null; STATE.editingFoodId=null; renderMain(); attachNavHighlight(); });
+  });
+  renderMain();
+}
+function navItem(id,label,color){
+  return `<div class="navitem${STATE.tab===id?' active':''}" data-tab="${id}">
+    <span class="plate" style="background:${color}"></span>${label}
+  </div>`;
+}
+function attachNavHighlight(){
+  document.querySelectorAll('.navitem').forEach(el=>{
+    el.classList.toggle('active', el.dataset.tab === STATE.tab);
+  });
+}
+
+function renderMain(){
+  const main = document.getElementById('main');
+  if(STATE.tab==='dashboard') main.innerHTML = viewDashboard();
+  else if(STATE.tab==='food') main.innerHTML = viewFood();
+  else if(STATE.tab==='weight') main.innerHTML = viewWeight();
+  else if(STATE.tab==='workouts') main.innerHTML = viewWorkouts();
+  else if(STATE.tab==='trends') main.innerHTML = viewTrends();
+  else if(STATE.tab==='settings') main.innerHTML = viewSettings();
+  bindTabEvents();
+}
+
+/* ===================== DASHBOARD ===================== */
+function viewDashboard(){
+  const targets = computeTargets(STATE.profile);
+  const totals = todaysTotals();
+  const burned = todaysCaloriesBurned();
+  const latestWeight = STATE.weightLogs.length ? STATE.weightLogs[STATE.weightLogs.length-1] : null;
+  const startWeight = STATE.weightLogs.length ? STATE.weightLogs[0].weightLbs : STATE.profile.weightLbs;
+  const gained = latestWeight ? (latestWeight.weightLbs - startWeight) : 0;
+
+  return `
+    <h1 class="pagehead">Today</h1>
+    <p class="pagesub">${new Date().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'})}</p>
+
+    <div class="panel">
+      <div class="panel-title">Calories</div>
+      <div class="bigstat">
+        <span class="num">${fmt(totals.calories)}</span>
+        <span class="unit">/ ${fmt(targets.calories)} kcal</span>
+      </div>
+      <div class="bartrack" style="margin-top:10px;">
+        <div class="barfill" style="width:${pct(totals.calories,targets.calories)}%; background:var(--cal);"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Macros</div>
+      ${macroRow('Protein', totals.protein, targets.proteinG, 'var(--protein)')}
+      ${macroRow('Carbs', totals.carbs, targets.carbsG, 'var(--carbs)')}
+      ${macroRow('Fat', totals.fat, targets.fatG, 'var(--fat)')}
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Progress</div>
+      <div class="statgrid">
+        <div class="statbox"><div class="k">Current weight</div><div class="v">${latestWeight ? latestWeight.weightLbs : STATE.profile.weightLbs} lb</div></div>
+        <div class="statbox"><div class="k">Since start</div><div class="v">${gained>=0?'+':''}${gained.toFixed(1)} lb</div></div>
+        <div class="statbox"><div class="k">TDEE (maintenance)</div><div class="v">${fmt(targets.tdee)}</div></div>
+        <div class="statbox"><div class="k">${targets.isMinicut ? 'Daily deficit' : 'Daily surplus'}</div><div class="v">${targets.isMinicut ? '−' : '+'}${fmt(Math.abs(targets.tdee - targets.calories))}</div></div>
+        <div class="statbox"><div class="k">Burned (workouts)</div><div class="v">${fmt(burned)}</div></div>
+      </div>
+    </div>
+
+    ${rateOfGainPanel()}
+
+    <div class="notebox">${targets.isMinicut
+      ? `Mini-cut mode: eating ${STATE.profile.deficitPct}% below maintenance. The idea (per Jeff Nippard) is a short 4–6 week trim to knock off fat gained on the bulk before going back to a surplus — not a long-term diet.`
+      : `Running a ${STATE.profile.surplusPct}% surplus above maintenance — within the 5–10% range Jeff Nippard recommends in "How To Bulk Like A Pro" to build muscle without excess fat. Watch the rate-of-gain panel below more than the day-to-day number; that's the real signal of whether the surplus is sized right.`}</div>
+  `;
+}
+function rateOfGainPanel(){
+  const rate = computeRateOfGain();
+  if(!rate){
+    return `<div class="panel"><div class="panel-title">Rate of gain</div><div class="empty">Log weight at least twice, a week or more apart, to see your actual trend against target.</div></div>`;
+  }
+  const status = rateStatus(rate, STATE.profile);
+  const color = status.tone === 'ok' ? 'var(--fat)' : status.tone === 'high' ? 'var(--protein)' : 'var(--carbs)';
+  return `
+    <div class="panel">
+      <div class="panel-title">Rate of gain <span class="mono" style="font-weight:400; text-transform:none; letter-spacing:0;">(last ${rate.days} days)</span></div>
+      <div class="bigstat"><span class="num" style="color:${color}">${STATE.profile.phase==='minicut' ? (-rate.pctPerWeek).toFixed(2) : rate.pctPerMonth.toFixed(2)}%</span>
+      <span class="unit">${STATE.profile.phase==='minicut' ? 'per week' : 'per month'}</span></div>
+      <div class="notebox" style="margin-top:12px; margin-bottom:0; border-left-color:${color};">${status.text}</div>
+    </div>
+  `;
+}
+function pct(val,target){ if(!target) return 0; return Math.max(0, Math.min(100, (val/target)*100)); }
+function macroRow(label, val, target, color){
+  return `
+    <div class="macrorow">
+      <div class="macrorow-top">
+        <span class="macrorow-label">${label}</span>
+        <span class="macrorow-nums"><b>${fmt(val)}g</b> / ${fmt(target)}g</span>
+      </div>
+      <div class="bartrack"><div class="barfill" style="width:${pct(val,target)}%; background:${color};"></div></div>
+    </div>
+  `;
+}
+
+/* ===================== FOOD ===================== */
+function viewFood(){
+  const t = todayStr();
+  const entries = STATE.foodLogs.filter(e=>e.date===t).slice().reverse();
+  return `
+    <h1 class="pagehead">Log Food</h1>
+    <p class="pagesub">Describe what you ate, add a photo, or both — then review the estimate before saving.</p>
+
+    <div class="panel">
+      <div class="panel-title">New entry</div>
+      <div class="fieldrow">
+        <label for="foodDesc">Description &amp; quantity</label>
+        <textarea id="foodDesc" placeholder="e.g. 8oz grilled chicken breast, 1.5 cups white rice, 1 tbsp olive oil"></textarea>
+      </div>
+      <div class="fieldrow">
+        <label for="foodPhoto">Photo (optional)</label>
+        <input type="file" id="foodPhoto" accept="image/*">
+        <img id="imgPreview" class="imgpreview" style="display:none;">
+      </div>
+      <div class="btnrow">
+        <button class="primary" id="btnAnalyze">Analyze</button>
+        <label class="toggle"><input type="checkbox" id="manualToggle"> I already know the macros — skip analysis</label>
+      </div>
+      <div id="analyzeArea"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Today's log</div>
+      ${entries.length ? entries.map(e=>foodEntryRow(e)).join('') : '<div class="empty">No entries yet today.</div>'}
+      ${entries.length ? `<div class="btnrow" style="margin-top:10px;"><span class="mono" style="font-size:12px; color:var(--text-dim);">Totals: ${fmt(entries.reduce((a,e)=>a+e.totals.calories,0))} kcal</span></div>` : ''}
+    </div>
+  `;
+}
+function foodEntryRow(e){
+  if(STATE.editingFoodId === e.id){
+    return `
+      <div class="logentry" style="flex-direction:column; align-items:stretch;">
+        <div class="logentry-name" style="margin-bottom:8px;">${escapeHtml(e.label)} <span class="logentry-meta">(editing)</span></div>
+        <div class="fieldgrid" style="margin-bottom:4px;">
+          <div class="fieldrow"><label>Label</label><input type="text" id="editLabel-${e.id}" value="${escapeHtml(e.label)}"></div>
+          <div class="fieldrow"><label>Calories</label><input type="number" id="editCal-${e.id}" value="${Math.round(e.totals.calories)}"></div>
+        </div>
+        <div class="fieldgrid3">
+          <div class="fieldrow"><label>Protein (g)</label><input type="number" id="editP-${e.id}" value="${Math.round(e.totals.protein_g)}"></div>
+          <div class="fieldrow"><label>Carbs (g)</label><input type="number" id="editC-${e.id}" value="${Math.round(e.totals.carbs_g)}"></div>
+          <div class="fieldrow"><label>Fat (g)</label><input type="number" id="editF-${e.id}" value="${Math.round(e.totals.fat_g)}"></div>
+        </div>
+        <div class="btnrow">
+          <button class="primary small" data-save-food="${e.id}">Save</button>
+          <button class="small" data-cancel-edit-food="${e.id}">Cancel</button>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="logentry">
+      <div class="logentry-main">
+        <div class="logentry-name">${escapeHtml(e.label)}</div>
+        <div class="logentry-meta">${e.time || ''}</div>
+      </div>
+      <div class="logentry-macros">
+        <span class="m-k">${fmt(e.totals.calories)} kcal</span>
+        <span class="m-p">P ${fmt(e.totals.protein_g)}</span>
+        <span class="m-c">C ${fmt(e.totals.carbs_g)}</span>
+        <span class="m-f">F ${fmt(e.totals.fat_g)}</span>
+      </div>
+      <div class="btnrow" style="margin-top:0;">
+        <button class="small" data-edit-food="${e.id}">Edit</button>
+        <button class="small danger" data-del-food="${e.id}">Remove</button>
+      </div>
+    </div>
+  `;
+}
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+function bindFoodEvents(){
+  document.querySelectorAll('[data-edit-food]').forEach(el=>{
+    el.addEventListener('click', ()=>{ STATE.editingFoodId = el.dataset.editFood; renderMain(); });
+  });
+  document.querySelectorAll('[data-cancel-edit-food]').forEach(el=>{
+    el.addEventListener('click', ()=>{ STATE.editingFoodId = null; renderMain(); });
+  });
+  document.querySelectorAll('[data-save-food]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const id = el.dataset.saveFood;
+      const entry = STATE.foodLogs.find(f=>f.id===id);
+      if(!entry) return;
+      entry.label = document.getElementById('editLabel-'+id).value || entry.label;
+      entry.totals = {
+        calories: Number(document.getElementById('editCal-'+id).value)||0,
+        protein_g: Number(document.getElementById('editP-'+id).value)||0,
+        carbs_g: Number(document.getElementById('editC-'+id).value)||0,
+        fat_g: Number(document.getElementById('editF-'+id).value)||0,
+      };
+      await saveFoodLogs();
+      STATE.editingFoodId = null;
+      renderMain();
+    });
+  });
+  const photoInput = document.getElementById('foodPhoto');
+  if(photoInput){
+    photoInput.addEventListener('change', async (ev)=>{
+      const file = ev.target.files[0];
+      if(!file) return;
+      const resized = await resizeImageToBase64(file, 1024);
+      STATE.analyzeImage = resized;
+      const prev = document.getElementById('imgPreview');
+      prev.src = resized.previewUrl; prev.style.display='block';
+    });
+  }
+  const btn = document.getElementById('btnAnalyze');
+  if(btn){
+    btn.addEventListener('click', async ()=>{
+      const desc = document.getElementById('foodDesc').value.trim();
+      const manual = document.getElementById('manualToggle').checked;
+      if(!desc && !STATE.analyzeImage){
+
+        STATE.analyzeError = 'Add a description or a photo first.';
+        renderAnalyzeArea(); return;
+      }
+      if(manual){
+        STATE.analyzeResult = { items:[{name: desc || 'Manual entry', quantity:'', calories:0, protein_g:0, carbs_g:0, fat_g:0}], total:{calories:0, protein_g:0, carbs_g:0, fat_g:0} };
+        STATE.analyzeError = null;
+        renderAnalyzeArea();
+        return;
+      }
+      STATE.analyzeLoading = true; STATE.analyzeError = null; STATE.analyzeResult = null;
+      renderAnalyzeArea();
+      try{
+        const result = await analyzeFood(desc, STATE.analyzeImage);
+        STATE.analyzeResult = result;
+      }catch(err){
+        STATE.analyzeError = 'Could not analyze that (' + (err.message || 'unknown error') + '). Try a clearer description, or check "I already know the macros" to enter it yourself.';
+      }
+      STATE.analyzeLoading = false;
+      renderAnalyzeArea();
+    });
+  }
+  document.querySelectorAll('[data-del-food]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      STATE.foodLogs = STATE.foodLogs.filter(e=>e.id !== el.dataset.delFood);
+      await saveFoodLogs();
+      renderMain();
+    });
+  });
+}
+
+function renderAnalyzeArea(){
+  const area = document.getElementById('analyzeArea');
+  if(!area) return;
+  if(STATE.analyzeLoading){
+    area.innerHTML = `<div class="loading"><div class="spinner"></div> Estimating macros...</div>`;
+    return;
+  }
+  if(STATE.analyzeError){
+    area.innerHTML = `<div class="errbox">${escapeHtml(STATE.analyzeError)}</div>`;
+    return;
+  }
+  if(STATE.analyzeResult){
+    const r = STATE.analyzeResult;
+    area.innerHTML = `
+      <div class="analyzebox">
+        ${r.items.map(i=>`<div class="itemline">${escapeHtml(i.name)}${i.quantity ? ' — '+escapeHtml(i.quantity):''}</div>`).join('')}
+        <div class="fieldgrid" style="margin-top:12px;">
+          <div class="fieldrow"><label>Calories</label><input type="number" id="revCal" value="${Math.round(r.total.calories)}"></div>
+          <div class="fieldrow"><label>Protein (g)</label><input type="number" id="revP" value="${Math.round(r.total.protein_g)}"></div>
+          <div class="fieldrow"><label>Carbs (g)</label><input type="number" id="revC" value="${Math.round(r.total.carbs_g)}"></div>
+          <div class="fieldrow"><label>Fat (g)</label><input type="number" id="revF" value="${Math.round(r.total.fat_g)}"></div>
+        </div>
+        <div class="fieldrow"><label>Label for log</label><input type="text" id="revLabel" value="${escapeHtml(r.items.map(i=>i.name).join(', '))}"></div>
+        <div class="btnrow">
+          <button class="primary" id="btnCommitFood">Add to log</button>
+          <button id="btnCancelFood">Discard</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnCommitFood').addEventListener('click', commitFoodEntry);
+    document.getElementById('btnCancelFood').addEventListener('click', ()=>{ STATE.analyzeResult=null; renderAnalyzeArea(); });
+    return;
+  }
+  area.innerHTML = '';
+}
+
+async function commitFoodEntry(){
+  const entry = {
+    id: uid(), date: todayStr(),
+    time: new Date().toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}),
+    label: document.getElementById('revLabel').value || 'Food entry',
+    totals: {
+      calories: Number(document.getElementById('revCal').value)||0,
+      protein_g: Number(document.getElementById('revP').value)||0,
+      carbs_g: Number(document.getElementById('revC').value)||0,
+      fat_g: Number(document.getElementById('revF').value)||0,
+    }
+  };
+  STATE.foodLogs.push(entry);
+  await saveFoodLogs();
+  STATE.analyzeResult = null; STATE.analyzeImage = null;
+  renderMain();
+}
+
+function resizeImageToBase64(file, maxDim){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if(w > h && w > maxDim){ h = h*(maxDim/w); w = maxDim; }
+      else if(h > maxDim){ w = w*(maxDim/h); h = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      resolve({ base64: dataUrl.split(',')[1], mime:'image/jpeg', previewUrl: dataUrl });
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function analyzeFood(description, imageObj){
+  const response = await fetch('/api/analyze-food', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      description: description || null,
+      image: imageObj ? { base64: imageObj.base64, mime: imageObj.mime } : null
+    })
+  });
+  if(!response.ok){
+    const errBody = await response.json().catch(()=>({}));
+    throw new Error(errBody.error || ('server error ' + response.status));
+  }
+  const parsed = await response.json();
+  if(!parsed.total) throw new Error('unexpected response format');
+  return parsed;
+}
+
+/* ===================== WEIGHT ===================== */
+function viewWeight(){
+  const logs = STATE.weightLogs.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  return `
+    <h1 class="pagehead">Weight</h1>
+    <p class="pagesub">Log consistently (same time of day, e.g. fasted each morning) for the clearest trend.</p>
+
+    <div class="panel">
+      <div class="panel-title">Log weight</div>
+      <div class="fieldgrid">
+        <div class="fieldrow"><label>Date</label><input type="date" id="wDate" value="${todayStr()}"></div>
+        <div class="fieldrow"><label>Weight (lb)</label><input type="number" step="0.1" id="wVal" placeholder="185.0"></div>
+      </div>
+      <button class="primary" id="btnAddWeight">Log weight</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Trend</div>
+      ${logs.length >= 2 ? weightChart(logs) : '<div class="empty">Log at least two entries to see a trend line.</div>'}
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">History</div>
+      ${logs.length ? logs.slice().reverse().map(l=>`
+        <div class="logentry">
+          <div class="logentry-main"><div class="logentry-name mono">${l.weightLbs} lb</div><div class="logentry-meta">${l.date}</div></div>
+          <button class="small danger" data-del-weight="${l.id}">Remove</button>
+        </div>
+      `).join('') : '<div class="empty">No entries yet.</div>'}
+    </div>
+  `;
+}
+function weightChart(logs){
+  const w = 800, h = 160, pad = 24;
+  const vals = logs.map(l=>l.weightLbs);
+  const min = Math.min(...vals)-1, max = Math.max(...vals)+1;
+  const xStep = (w-pad*2)/(logs.length-1);
+  const pts = logs.map((l,i)=>{
+    const x = pad + i*xStep;
+    const y = h-pad - ((l.weightLbs-min)/(max-min))*(h-pad*2);
+    return [x,y];
+  });
+  const path = pts.map((p,i)=> (i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const dots = pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="var(--carbs)"/>`).join('');
+  return `<svg class="chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <path d="${path}" fill="none" stroke="var(--carbs)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+    ${dots}
+  </svg>`;
+}
+function bindWeightEvents(){
+  const btn = document.getElementById('btnAddWeight');
+  if(btn) btn.addEventListener('click', async ()=>{
+    const date = document.getElementById('wDate').value || todayStr();
+    const val = Number(document.getElementById('wVal').value);
+    if(!val) return;
+    STATE.weightLogs.push({id:uid(), date, weightLbs:val});
+    await saveWeightLogs();
+    renderMain();
+  });
+  document.querySelectorAll('[data-del-weight]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      STATE.weightLogs = STATE.weightLogs.filter(l=>l.id !== el.dataset.delWeight);
+      await saveWeightLogs();
+      renderMain();
+    });
+  });
+}
+
+/* ===================== WORKOUTS ===================== */
+let draftExercises = [{name:'', sets:''}];
+let settingsPhase = null; // tracks the (unsaved) phase selection while editing Settings
+function viewWorkouts(){
+  const logs = STATE.workoutLogs.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  return `
+    <h1 class="pagehead">Workouts</h1>
+    <p class="pagesub">Log lifts here to track volume, progression, and estimated calories burned over the bulk.</p>
+
+    <div class="notebox">This app can't sync with the iPhone Health / Fitness app — there's no way for a web-based tool like this to reach into iOS HealthKit. If you want your lifts to also show up in Apple Health, the practical route is logging strength workouts there directly (or via a Shortcuts automation), and using this log as your detailed set-by-set record.</div>
+
+    <div class="panel">
+      <div class="panel-title">New workout</div>
+      <div class="fieldgrid">
+        <div class="fieldrow"><label>Date</label><input type="date" id="woDate" value="${todayStr()}"></div>
+        <div class="fieldrow"><label>Session name</label><input type="text" id="woName" placeholder="e.g. Push day"></div>
+      </div>
+      <div id="exList">${draftExercises.map((e,i)=>exerciseRow(e,i)).join('')}</div>
+      <div class="btnrow">
+        <button id="btnAddEx" class="small">+ Add exercise</button>
+      </div>
+      <div class="fieldgrid3" style="margin-top:14px;">
+        <div class="fieldrow"><label>Duration (min)</label><input type="number" id="woDuration" placeholder="60"></div>
+        <div class="fieldrow"><label>Intensity</label>
+          <select id="woIntensity">
+            <option value="moderate">${MET_LABELS.moderate}</option>
+            <option value="vigorous" selected>${MET_LABELS.vigorous}</option>
+            <option value="circuit">${MET_LABELS.circuit}</option>
+          </select>
+        </div>
+        <div class="fieldrow"><label>Calories burned (est., editable)</label><input type="number" id="woCalories" placeholder="0"></div>
+      </div>
+      <div class="fieldrow" style="margin-top:14px;"><label>Notes</label><textarea id="woNotes" placeholder="How it felt, energy, anything to adjust next time"></textarea></div>
+      <button class="primary" id="btnSaveWorkout">Save workout</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">History</div>
+      ${logs.length ? logs.map(w=>`
+        <div class="logentry" style="align-items:flex-start;">
+          <div class="logentry-main">
+            <div class="logentry-name">${escapeHtml(w.name || 'Workout')}</div>
+            <div class="logentry-meta">${w.date}${w.duration ? ' · '+w.duration+' min' : ''}${w.caloriesBurned ? ' · '+fmt(w.caloriesBurned)+' kcal burned' : ''}</div>
+            <div class="logentry-meta">${w.exercises.filter(e=>e.name).map(e=>escapeHtml(e.name)+' — '+escapeHtml(e.sets)).join(' · ')}</div>
+            ${w.notes ? `<div class="logentry-meta">${escapeHtml(w.notes)}</div>` : ''}
+          </div>
+          <button class="small danger" data-del-workout="${w.id}">Remove</button>
+        </div>
+      `).join('') : '<div class="empty">No workouts logged yet.</div>'}
+    </div>
+  `;
+}
+function exerciseRow(e,i){
+  return `
+    <div class="exrow">
+      <div class="fieldgrid">
+        <div class="fieldrow"><label>Exercise</label><input type="text" class="exName" data-i="${i}" value="${escapeHtml(e.name)}" placeholder="e.g. Bench press"></div>
+        <div class="fieldrow"><label>Sets (e.g. 4x6 @225)</label><input type="text" class="exSets" data-i="${i}" value="${escapeHtml(e.sets)}" placeholder="4x6 @225"></div>
+      </div>
+    </div>
+  `;
+}
+function recomputeWoCalories(){
+  const durEl = document.getElementById('woDuration');
+  const intEl = document.getElementById('woIntensity');
+  const calEl = document.getElementById('woCalories');
+  if(!durEl || !intEl || !calEl) return;
+  const dur = Number(durEl.value)||0;
+  if(!dur){ return; }
+  const est = estimateWorkoutCalories(STATE.profile.weightLbs, MET_VALUES[intEl.value] || MET_VALUES.vigorous, dur);
+  calEl.value = Math.round(est);
+}
+function bindWorkoutEvents(){
+  document.querySelectorAll('.exName').forEach(el=> el.addEventListener('input', ()=>{ draftExercises[el.dataset.i].name = el.value; }));
+  document.querySelectorAll('.exSets').forEach(el=> el.addEventListener('input', ()=>{ draftExercises[el.dataset.i].sets = el.value; }));
+  const addBtn = document.getElementById('btnAddEx');
+  if(addBtn) addBtn.addEventListener('click', ()=>{ draftExercises.push({name:'',sets:''}); renderMain(); });
+  const durEl = document.getElementById('woDuration');
+  if(durEl) durEl.addEventListener('input', recomputeWoCalories);
+  const intEl = document.getElementById('woIntensity');
+  if(intEl) intEl.addEventListener('change', recomputeWoCalories);
+  const saveBtn = document.getElementById('btnSaveWorkout');
+  if(saveBtn) saveBtn.addEventListener('click', async ()=>{
+    const date = document.getElementById('woDate').value || todayStr();
+    const name = document.getElementById('woName').value;
+    const notes = document.getElementById('woNotes').value;
+    const duration = Number(document.getElementById('woDuration').value)||0;
+    const intensity = document.getElementById('woIntensity').value;
+    const caloriesBurned = Number(document.getElementById('woCalories').value)||0;
+    const exercises = draftExercises.filter(e=>e.name.trim());
+    if(!exercises.length) return;
+    STATE.workoutLogs.push({id:uid(), date, name, notes, exercises, duration, intensity, caloriesBurned});
+    await saveWorkoutLogs();
+    draftExercises = [{name:'', sets:''}];
+    renderMain();
+  });
+  document.querySelectorAll('[data-del-workout]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      STATE.workoutLogs = STATE.workoutLogs.filter(w=>w.id !== el.dataset.delWorkout);
+      await saveWorkoutLogs();
+      renderMain();
+    });
+  });
+}
+
+/* ===================== TRENDS ===================== */
+function periodKeyWeek(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const day = d.getDay();
+  const diff = (day===0 ? -6 : 1-day);
+  d.setDate(d.getDate()+diff);
+  return d.toISOString().slice(0,10);
+}
+function periodKeyMonth(dateStr){ return dateStr.slice(0,7); }
+
+function aggregatePeriods(keyFn){
+  const periods = {};
+  function ensure(k){
+    if(!periods[k]) periods[k] = {
+      key:k, days:new Set(), calories:0, protein:0, carbs:0, fat:0,
+      weightFirst:null, weightLast:null, weightFirstDate:null, weightLastDate:null,
+      workouts:0, burned:0
+    };
+    return periods[k];
+  }
+  STATE.foodLogs.forEach(e=>{
+    const p = ensure(keyFn(e.date));
+    p.days.add(e.date);
+    p.calories += e.totals.calories;
+    p.protein += e.totals.protein_g;
+    p.carbs += e.totals.carbs_g;
+    p.fat += e.totals.fat_g;
+  });
+  STATE.weightLogs.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(l=>{
+    const p = ensure(keyFn(l.date));
+    if(p.weightFirstDate===null || l.date < p.weightFirstDate){ p.weightFirst = l.weightLbs; p.weightFirstDate = l.date; }
+    if(p.weightLastDate===null || l.date > p.weightLastDate){ p.weightLast = l.weightLbs; p.weightLastDate = l.date; }
+  });
+  STATE.workoutLogs.forEach(w=>{
+    const p = ensure(keyFn(w.date));
+    p.workouts += 1;
+    p.burned += (w.caloriesBurned||0);
+  });
+  return Object.values(periods).sort((a,b)=>b.key.localeCompare(a.key));
+}
+
+function trendsTable(periods, labelFn, targets){
+  if(!periods.length) return '<div class="empty">No data logged yet.</div>';
+  return `
+    <div class="trendwrap">
+    <table class="trendtable">
+      <thead><tr>
+        <th>Period</th>
+        <th>Days logged</th>
+        <th>Avg kcal/day</th>
+        <th>Avg P/C/F (g)</th>
+        <th>Weight Δ</th>
+        <th>Workouts</th>
+        <th>Burned</th>
+      </tr></thead>
+      <tbody>
+      ${periods.map(p=>{
+        const n = p.days.size || 1;
+        const avgCal = p.calories/n, avgP = p.protein/n, avgC = p.carbs/n, avgF = p.fat/n;
+        const weightDelta = (p.weightFirst!==null && p.weightLast!==null) ? (p.weightLast - p.weightFirst) : null;
+        return `<tr>
+          <td>${labelFn(p.key)}</td>
+          <td>${p.days.size}</td>
+          <td class="mono">${p.days.size ? fmt(avgCal)+' / '+fmt(targets.calories) : '—'}</td>
+          <td class="mono">${p.days.size ? `<span class="m-p">${fmt(avgP)}</span>/<span class="m-c">${fmt(avgC)}</span>/<span class="m-f">${fmt(avgF)}</span>` : '—'}</td>
+          <td class="mono">${weightDelta!==null ? (weightDelta>=0?'+':'')+weightDelta.toFixed(1)+' lb' : '—'}</td>
+          <td class="mono">${p.workouts || '—'}</td>
+          <td class="mono">${p.burned ? fmt(p.burned) : '—'}</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+    </div>
+  `;
+}
+
+function viewTrends(){
+  const targets = computeTargets(STATE.profile);
+  const weekly = aggregatePeriods(periodKeyWeek).slice(0,10);
+  const monthly = aggregatePeriods(periodKeyMonth);
+  const weekLabel = k => {
+    const d = new Date(k+'T00:00:00');
+    const end = new Date(d); end.setDate(end.getDate()+6);
+    return `${d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}–${end.toLocaleDateString(undefined,{month:'short',day:'numeric'})}`;
+  };
+  const monthLabel = k => {
+    const [y,m] = k.split('-');
+    return new Date(Number(y), Number(m)-1, 1).toLocaleDateString(undefined,{month:'long', year:'numeric'});
+  };
+  return `
+    <h1 class="pagehead">Trends</h1>
+    <p class="pagesub">Weekly and monthly rollups from your food, weight, and workout logs. Targets shown reflect your current Settings.</p>
+    <div class="panel">
+      <div class="panel-title">Weekly (most recent ${weekly.length} week${weekly.length===1?'':'s'} with data)</div>
+      ${trendsTable(weekly, weekLabel, targets)}
+    </div>
+    <div class="panel">
+      <div class="panel-title">Monthly</div>
+      ${trendsTable(monthly, monthLabel, targets)}
+    </div>
+  `;
+}
+
+/* ===================== SETTINGS ===================== */
+function viewSettings(){
+  const p = STATE.profile;
+  if(settingsPhase === null) settingsPhase = p.phase;
+  const previewProfile = {...p, phase: settingsPhase};
+  const t = computeTargets(previewProfile);
+  return `
+    <h1 class="pagehead">Settings</h1>
+    <p class="pagesub">These numbers drive your daily targets on the Dashboard.</p>
+
+    <div class="panel">
+      <div class="panel-title">Profile</div>
+      <div class="fieldgrid3">
+        <div class="fieldrow"><label>Sex</label>
+          <select id="sSex">
+            <option value="male" ${p.sex==='male'?'selected':''}>Male</option>
+            <option value="female" ${p.sex==='female'?'selected':''}>Female</option>
+          </select>
+        </div>
+        <div class="fieldrow"><label>Age</label><input type="number" id="sAge" value="${p.age}"></div>
+        <div class="fieldrow"><label>Weight (lb)</label><input type="number" step="0.1" id="sWeight" value="${p.weightLbs}"></div>
+      </div>
+      <div class="fieldgrid3">
+        <div class="fieldrow"><label>Height — feet</label><input type="number" id="sHft" value="${p.heightFt}"></div>
+        <div class="fieldrow"><label>Height — inches</label><input type="number" id="sHin" value="${p.heightIn}"></div>
+        <div class="fieldrow"><label>Activity outside lifting</label>
+          <select id="sActivity">
+            ${Object.keys(ACTIVITY_MULT).map(k=>`<option value="${k}" ${p.activity===k?'selected':''}>${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Training experience &amp; phase</div>
+      <div class="fieldgrid">
+        <div class="fieldrow"><label>Training experience</label>
+          <select id="sExperience">
+            ${Object.keys(RATE_BANDS).map(k=>`<option value="${k}" ${p.experience===k?'selected':''}>${RATE_BANDS[k].label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fieldrow"><label>Phase</label>
+          <select id="sPhase">
+            <option value="bulk" ${settingsPhase==='bulk'?'selected':''}>Bulk (surplus)</option>
+            <option value="minicut" ${settingsPhase==='minicut'?'selected':''}>Mini-cut (short deficit)</option>
+          </select>
+        </div>
+      </div>
+      <div class="notebox" style="margin-top:0;">This sets the rate-of-gain target the Dashboard checks your weight trend against — ${RATE_BANDS[p.experience].min}–${RATE_BANDS[p.experience].max}% bodyweight/month for a bulk at your experience level.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">${settingsPhase==='minicut' ? 'Mini-cut parameters' : 'Bulk parameters'}</div>
+      <div class="fieldgrid3">
+        ${settingsPhase==='minicut'
+          ? `<div class="fieldrow"><label>Deficit (% below maintenance)</label><input type="number" step="0.5" id="sDeficitPct" value="${p.deficitPct}"></div>`
+          : `<div class="fieldrow"><label>Surplus (% above maintenance)</label><input type="number" step="0.5" id="sSurplusPct" value="${p.surplusPct}"></div>`}
+        <div class="fieldrow"><label>Protein (g / lb bodyweight)</label><input type="number" step="0.05" id="sProtein" value="${p.proteinPerLb}"></div>
+        <div class="fieldrow"><label>Fat (% of calories)</label><input type="number" step="1" id="sFatPct" value="${p.fatPct}"></div>
+      </div>
+      <div class="notebox" style="margin-top:4px;">Following Jeff Nippard's framework from <i>How To Bulk Like A Pro</i>: a 5–10% surplus above maintenance, 0.7–1g protein per lb bodyweight, and fat at 20–30% of calories — sized to build muscle without excess fat, with periodic mini-cuts (~20–25% deficit, 4–6 weeks) if a long bulk starts adding more fat than you want. The beginner/intermediate rate-of-gain bands above are his; the advanced band is my extrapolation, not a figure he stated directly.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Calculated targets</div>
+      <div class="statgrid">
+        <div class="statbox"><div class="k">BMR</div><div class="v">${fmt(t.bmr)}</div></div>
+        <div class="statbox"><div class="k">TDEE</div><div class="v">${fmt(t.tdee)}</div></div>
+        <div class="statbox"><div class="k">Target calories</div><div class="v">${fmt(t.calories)}</div></div>
+        <div class="statbox"><div class="k">Protein</div><div class="v">${fmt(t.proteinG)}g</div></div>
+        <div class="statbox"><div class="k">Carbs</div><div class="v">${fmt(t.carbsG)}g</div></div>
+        <div class="statbox"><div class="k">Fat</div><div class="v">${fmt(t.fatG)}g</div></div>
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <button class="primary" id="btnSaveProfile">Save settings</button>
+    </div>
+
+    <div class="panel" style="margin-top:24px;">
+      <div class="panel-title">Data</div>
+      <p style="font-size:13px; color:var(--text-dim); margin-top:0;">Your data is stored privately in this browser (localStorage) and isn't sent anywhere except the macro-estimate calls to the server. Show a backup below and copy it somewhere safe (e.g. paste into Notes) — clearing browser data or switching devices will lose it otherwise.</p>
+      <div class="btnrow">
+        <button id="btnExport">Show backup text</button>
+        <button class="danger" id="btnReset">Reset all data</button>
+      </div>
+      <div id="exportArea"></div>
+    </div>
+  `;
+}
+
+function bindSettingsEvents(){
+  const phaseSel = document.getElementById('sPhase');
+  if(phaseSel) phaseSel.addEventListener('change', ()=>{
+    settingsPhase = phaseSel.value;
+    renderMain();
+  });
+  const save = document.getElementById('btnSaveProfile');
+  if(save) save.addEventListener('click', async ()=>{
+    const phase = document.getElementById('sPhase').value;
+    STATE.profile = {
+      sex: document.getElementById('sSex').value,
+      age: Number(document.getElementById('sAge').value)||25,
+      weightLbs: Number(document.getElementById('sWeight').value)||185,
+      heightFt: Number(document.getElementById('sHft').value)||5,
+      heightIn: Number(document.getElementById('sHin').value)||10,
+      activity: document.getElementById('sActivity').value,
+      experience: document.getElementById('sExperience').value,
+      phase: phase,
+      surplusPct: phase==='bulk' ? (Number(document.getElementById('sSurplusPct')?.value)||7.5) : STATE.profile.surplusPct,
+      deficitPct: phase==='minicut' ? (Number(document.getElementById('sDeficitPct')?.value)||20) : STATE.profile.deficitPct,
+      proteinPerLb: Number(document.getElementById('sProtein').value)||0.85,
+      fatPct: Number(document.getElementById('sFatPct').value)||25,
+    };
+    settingsPhase = null;
+    await saveProfile();
+    renderMain();
+  });
+  const exp = document.getElementById('btnExport');
+  if(exp) exp.addEventListener('click', ()=>{
+    const json = JSON.stringify({profile:STATE.profile, foodLogs:STATE.foodLogs, weightLogs:STATE.weightLogs, workoutLogs:STATE.workoutLogs}, null, 2);
+    const area = document.getElementById('exportArea');
+    area.innerHTML = `
+      <div class="fieldrow" style="margin-top:14px;">
+        <label>Tap inside the box, then Select All &amp; Copy, then paste it somewhere safe</label>
+        <textarea id="exportText" readonly style="min-height:160px; font-family:'Roboto Mono',monospace; font-size:11px;"></textarea>
+      </div>
+      <div class="btnrow"><button class="small" id="btnSelectExport">Select all</button></div>
+    `;
+    document.getElementById('exportText').value = json;
+    document.getElementById('btnSelectExport').addEventListener('click', ()=>{
+      const ta = document.getElementById('exportText');
+      ta.focus();
+      ta.setSelectionRange(0, ta.value.length);
+    });
+  });
+  const reset = document.getElementById('btnReset');
+  if(reset) reset.addEventListener('click', async ()=>{
+    if(!confirm('This clears all food, weight, and workout logs from this app. Continue?')) return;
+    STATE.foodLogs = []; STATE.weightLogs = []; STATE.workoutLogs = [];
+    await Promise.all([saveFoodLogs(), saveWeightLogs(), saveWorkoutLogs()]);
+    renderMain();
+  });
+}
+
+/* ===================== EVENT BINDING ===================== */
+function bindTabEvents(){
+  if(STATE.tab==='food') bindFoodEvents();
+  else if(STATE.tab==='weight') bindWeightEvents();
+  else if(STATE.tab==='workouts') bindWorkoutEvents();
+  else if(STATE.tab==='settings') bindSettingsEvents();
+}
+
+/* ===================== INIT ===================== */
+(async function init(){
+  document.getElementById('app').innerHTML = '<div style="padding:40px; color:#888;">Loading...</div>';
+  await loadAll();
+  render();
+})();
+</script>
+</body>
+</html>
