@@ -6,25 +6,18 @@ const app = express();
 app.use(express.json({ limit: '12mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const SYSTEM_PROMPT = 'You are a precise nutrition estimator. Analyze the food described and/or shown and estimate calories and macros. Respond ONLY with valid JSON, no markdown fences, no other text, matching exactly this schema: {"items":[{"name":string,"quantity":string,"calories":number,"protein_g":number,"carbs_g":number,"fat_g":number}],"total":{"calories":number,"protein_g":number,"carbs_g":number,"fat_g":number}}. Base estimates on standard USDA nutrition data for the described quantities.';
+const SYSTEM_PROMPT = 'You are a precise nutrition estimator. Analyze the food described and estimate calories and macros. Respond ONLY with valid JSON, no markdown fences, no other text, matching exactly this schema: {"items":[{"name":string,"quantity":string,"calories":number,"protein_g":number,"carbs_g":number,"fat_g":number}],"total":{"calories":number,"protein_g":number,"carbs_g":number,"fat_g":number}}. Base estimates on standard USDA nutrition data for the described quantities.';
 
 app.post('/api/analyze-food', async (req, res) => {
   if (!process.env.ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'Server is missing ANTHROPIC_API_KEY. Add it to .env and restart the server.' });
   }
-  const { description, image } = req.body || {};
-  if (!description && !image) {
-    return res.status(400).json({ error: 'Provide a description or an image.' });
+  const { description } = req.body || {};
+  if (!description) {
+    return res.status(400).json({ error: 'Provide a description.' });
   }
 
-  const content = [];
-  if (image && image.base64 && image.mime) {
-    content.push({ type: 'image', source: { type: 'base64', media_type: image.mime, data: image.base64 } });
-  }
-  content.push({
-    type: 'text',
-    text: description || 'Estimate the macros for the food shown in the image. Assume a typical single serving if quantity is unclear.'
-  });
+  const content = [{ type: 'text', text: description }];
 
   try {
     const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {

@@ -138,7 +138,6 @@
   .exrow-head{display:flex; justify-content:space-between; gap:10px; margin-bottom:8px;}
 
   ::placeholder{color:var(--text-faint);}
-  .imgpreview{max-width:180px; border-radius:var(--radius); border:1px solid var(--border); display:block; margin-top:8px;}
 
   table.trendtable{width:100%; border-collapse:collapse; font-size:12px;}
   table.trendtable th{padding:6px 10px 6px 0; text-align:left; color:var(--text-dim); border-bottom:1px solid var(--border); font-weight:600;}
@@ -184,7 +183,6 @@ let STATE = {
   analyzeResult: null,
   analyzeLoading: false,
   analyzeError: null,
-  analyzeImage: null, // {base64, mime, previewUrl}
   editingFoodId: null,
   foodViewDate: null, // date string being viewed/logged on the Log Food tab; defaults to today
 };
@@ -475,7 +473,7 @@ function viewFood(){
   const entries = STATE.foodLogs.filter(e=>e.date===viewDate).slice().reverse();
   return `
     <h1 class="pagehead">Log Food</h1>
-    <p class="pagesub">Describe what you ate, add a photo, or both — then review the estimate before saving.</p>
+    <p class="pagesub">Enter the macros directly, or describe the meal and let Claude estimate them.</p>
 
     <div class="panel">
       <div class="panel-title">New entry${isToday ? '' : ' — for ' + viewDate}</div>
@@ -483,14 +481,9 @@ function viewFood(){
         <label for="foodDesc">Description &amp; quantity</label>
         <textarea id="foodDesc" placeholder="e.g. 8oz grilled chicken breast, 1.5 cups white rice, 1 tbsp olive oil"></textarea>
       </div>
-      <div class="fieldrow">
-        <label for="foodPhoto">Photo (optional)</label>
-        <input type="file" id="foodPhoto" accept="image/*">
-        <img id="imgPreview" class="imgpreview" style="display:none;">
-      </div>
       <div class="btnrow">
         <button class="primary" id="btnAnalyze">Analyze</button>
-        <label class="toggle"><input type="checkbox" id="manualToggle"> I already know the macros — skip analysis</label>
+        <label class="toggle"><input type="checkbox" id="manualToggle" checked> I already know the macros — skip analysis</label>
       </div>
       <div id="analyzeArea"></div>
     </div>
@@ -592,25 +585,13 @@ function bindFoodEvents(){
       renderMain();
     });
   }
-  const photoInput = document.getElementById('foodPhoto');
-  if(photoInput){
-    photoInput.addEventListener('change', async (ev)=>{
-      const file = ev.target.files[0];
-      if(!file) return;
-      const resized = await resizeImageToBase64(file, 1024);
-      STATE.analyzeImage = resized;
-      const prev = document.getElementById('imgPreview');
-      prev.src = resized.previewUrl; prev.style.display='block';
-    });
-  }
   const btn = document.getElementById('btnAnalyze');
   if(btn){
     btn.addEventListener('click', async ()=>{
       const desc = document.getElementById('foodDesc').value.trim();
       const manual = document.getElementById('manualToggle').checked;
-      if(!desc && !STATE.analyzeImage){
-
-        STATE.analyzeError = 'Add a description or a photo first.';
+      if(!desc){
+        STATE.analyzeError = 'Add a description first.';
         renderAnalyzeArea(); return;
       }
       if(manual){
@@ -622,7 +603,7 @@ function bindFoodEvents(){
       STATE.analyzeLoading = true; STATE.analyzeError = null; STATE.analyzeResult = null;
       renderAnalyzeArea();
       try{
-        const result = await analyzeFood(desc, STATE.analyzeImage);
+        const result = await analyzeFood(desc);
         STATE.analyzeResult = result;
       }catch(err){
         STATE.analyzeError = 'Could not analyze that (' + (err.message || 'unknown error') + '). Try a clearer description, or check "I already know the macros" to enter it yourself.';
@@ -690,39 +671,15 @@ async function commitFoodEntry(){
   };
   STATE.foodLogs.push(entry);
   await saveFoodLogs();
-  STATE.analyzeResult = null; STATE.analyzeImage = null;
+  STATE.analyzeResult = null;
   renderMain();
 }
 
-function resizeImageToBase64(file, maxDim){
-  return new Promise((resolve,reject)=>{
-    const img = new Image();
-    const reader = new FileReader();
-    reader.onload = e => { img.src = e.target.result; };
-    reader.onerror = reject;
-    img.onload = () => {
-      let w = img.width, h = img.height;
-      if(w > h && w > maxDim){ h = h*(maxDim/w); w = maxDim; }
-      else if(h > maxDim){ w = w*(maxDim/h); h = maxDim; }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-      resolve({ base64: dataUrl.split(',')[1], mime:'image/jpeg', previewUrl: dataUrl });
-    };
-    img.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-async function analyzeFood(description, imageObj){
+async function analyzeFood(description){
   const response = await fetch('/api/analyze-food', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      description: description || null,
-      image: imageObj ? { base64: imageObj.base64, mime: imageObj.mime } : null
-    })
+    body: JSON.stringify({ description })
   });
   if(!response.ok){
     const errBody = await response.json().catch(()=>({}));

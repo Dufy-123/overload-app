@@ -1,6 +1,6 @@
 # OVERLOAD
 
-A bulk-tracking fitness app: log food by description or photo (AI macro estimate), track weight, log workouts with an estimated calorie burn, and see weekly/monthly rollups.
+A bulk-tracking fitness app: log food by description (manual entry or AI macro estimate), track weight, log workouts with an estimated calorie burn, and see weekly/monthly rollups.
 
 ## Setup
 
