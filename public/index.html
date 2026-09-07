@@ -515,7 +515,46 @@ function viewFood(){
       ${entries.length ? entries.map(e=>foodEntryRow(e)).join('') : '<div class="empty">No entries logged for this day.</div>'}
       ${entries.length ? `<div class="btnrow" style="margin-top:10px;"><span class="mono" style="font-size:12px; color:var(--text-dim);">Totals: ${fmt(entries.reduce((a,e)=>a+e.totals.calories,0))} kcal</span></div>` : ''}
     </div>
+
+    <div class="panel">
+      <div class="panel-title">History</div>
+      ${foodHistoryRows()}
+    </div>
   `;
+}
+function foodDailyTotals(){
+  const map = {};
+  STATE.foodLogs.forEach(e=>{
+    if(!map[e.date]) map[e.date] = { date:e.date, calories:0, protein_g:0, carbs_g:0, fat_g:0, count:0 };
+    const d = map[e.date];
+    d.calories += e.totals.calories;
+    d.protein_g += e.totals.protein_g;
+    d.carbs_g += e.totals.carbs_g;
+    d.fat_g += e.totals.fat_g;
+    d.count += 1;
+  });
+  return Object.values(map).sort((a,b)=> b.date.localeCompare(a.date));
+}
+function foodHistoryRows(){
+  const days = foodDailyTotals();
+  if(!days.length) return '<div class="empty">No food logged yet.</div>';
+  return days.map(d=>{
+    const label = new Date(d.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
+    return `
+      <div class="logentry" data-jump-food-date="${d.date}" style="cursor:pointer;">
+        <div class="logentry-main">
+          <div class="logentry-name">${label}${d.date===todayStr() ? ' (today)' : ''}</div>
+          <div class="logentry-meta">${d.count} ${d.count===1?'entry':'entries'}</div>
+        </div>
+        <div class="logentry-macros">
+          <span class="m-k">${fmt(d.calories)} kcal</span>
+          <span class="m-p">P ${fmt(d.protein_g)}</span>
+          <span class="m-c">C ${fmt(d.carbs_g)}</span>
+          <span class="m-f">F ${fmt(d.fat_g)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 function foodEntryRow(e){
   if(STATE.editingFoodId === e.id){
@@ -585,6 +624,13 @@ function bindFoodEvents(){
       await saveFoodLogs();
       STATE.editingFoodId = null;
       renderMain();
+    });
+  });
+  document.querySelectorAll('[data-jump-food-date]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      STATE.foodViewDate = el.dataset.jumpFoodDate;
+      renderMain();
+      window.scrollTo(0,0);
     });
   });
   const viewDateEl = document.getElementById('foodViewDate');
