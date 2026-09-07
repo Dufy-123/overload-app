@@ -185,6 +185,7 @@ let STATE = {
   analyzeError: null,
   editingFoodId: null,
   foodViewDate: null, // date string being viewed/logged on the Log Food tab; defaults to today
+  foodManualMode: null, // whether the Log Food "New entry" form shows manual macro fields vs. the AI description field; defaults to true
 };
 
 const DEFAULT_PROFILE = {
@@ -361,7 +362,7 @@ function render(){
     <main id="main"></main>
   `;
   document.querySelectorAll('.navitem').forEach(el=>{
-    el.addEventListener('click', ()=>{ STATE.tab = el.dataset.tab; STATE.analyzeResult=null; STATE.analyzeError=null; STATE.editingFoodId=null; STATE.foodViewDate=null; renderMain(); attachNavHighlight(); });
+    el.addEventListener('click', ()=>{ STATE.tab = el.dataset.tab; STATE.analyzeResult=null; STATE.analyzeError=null; STATE.editingFoodId=null; STATE.foodViewDate=null; STATE.foodManualMode=null; renderMain(); attachNavHighlight(); });
   });
   renderMain();
 }
@@ -468,23 +469,38 @@ function macroRow(label, val, target, color){
 /* ===================== FOOD ===================== */
 function viewFood(){
   if(!STATE.foodViewDate) STATE.foodViewDate = todayStr();
+  if(STATE.foodManualMode === null) STATE.foodManualMode = true;
   const viewDate = STATE.foodViewDate;
   const isToday = viewDate === todayStr();
+  const manual = STATE.foodManualMode;
   const entries = STATE.foodLogs.filter(e=>e.date===viewDate).slice().reverse();
   return `
     <h1 class="pagehead">Log Food</h1>
-    <p class="pagesub">Enter the macros directly, or describe the meal and let Claude estimate them.</p>
+    <p class="pagesub">${manual ? 'Enter the macros directly.' : 'Describe the meal and let Claude estimate the macros.'}</p>
 
     <div class="panel">
-      <div class="panel-title">New entry${isToday ? '' : ' — for ' + viewDate}</div>
-      <div class="fieldrow">
-        <label for="foodDesc">Description &amp; quantity</label>
-        <textarea id="foodDesc" placeholder="e.g. 8oz grilled chicken breast, 1.5 cups white rice, 1 tbsp olive oil"></textarea>
+      <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <span>New entry${isToday ? '' : ' — for ' + viewDate}</span>
+        <label class="toggle"><input type="checkbox" id="manualToggle" ${manual ? 'checked' : ''}> I already know the macros</label>
       </div>
-      <div class="btnrow">
+      ${manual ? `
+        <div class="fieldgrid" style="margin-bottom:4px;">
+          <div class="fieldrow"><label>Label</label><input type="text" id="manLabel" placeholder="e.g. Protein shake"></div>
+          <div class="fieldrow"><label>Calories</label><input type="number" id="manCal" placeholder="0"></div>
+        </div>
+        <div class="fieldgrid3">
+          <div class="fieldrow"><label>Protein (g)</label><input type="number" id="manP" placeholder="0"></div>
+          <div class="fieldrow"><label>Carbs (g)</label><input type="number" id="manC" placeholder="0"></div>
+          <div class="fieldrow"><label>Fat (g)</label><input type="number" id="manF" placeholder="0"></div>
+        </div>
+        <button class="primary" id="btnAddManual">Add to log</button>
+      ` : `
+        <div class="fieldrow">
+          <label for="foodDesc">Description &amp; quantity</label>
+          <textarea id="foodDesc" placeholder="e.g. 8oz grilled chicken breast, 1.5 cups white rice, 1 tbsp olive oil"></textarea>
+        </div>
         <button class="primary" id="btnAnalyze">Analyze</button>
-        <label class="toggle"><input type="checkbox" id="manualToggle" checked> I already know the macros — skip analysis</label>
-      </div>
+      `}
       <div id="analyzeArea"></div>
     </div>
 
@@ -585,20 +601,39 @@ function bindFoodEvents(){
       renderMain();
     });
   }
+  const manualToggleEl = document.getElementById('manualToggle');
+  if(manualToggleEl){
+    manualToggleEl.addEventListener('change', ()=>{
+      STATE.foodManualMode = manualToggleEl.checked;
+      renderMain();
+    });
+  }
+  const addManualBtn = document.getElementById('btnAddManual');
+  if(addManualBtn){
+    addManualBtn.addEventListener('click', async ()=>{
+      const entry = {
+        id: uid(), date: STATE.foodViewDate || todayStr(),
+        time: new Date().toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}),
+        label: document.getElementById('manLabel').value || 'Food entry',
+        totals: {
+          calories: Number(document.getElementById('manCal').value)||0,
+          protein_g: Number(document.getElementById('manP').value)||0,
+          carbs_g: Number(document.getElementById('manC').value)||0,
+          fat_g: Number(document.getElementById('manF').value)||0,
+        }
+      };
+      STATE.foodLogs.push(entry);
+      await saveFoodLogs();
+      renderMain();
+    });
+  }
   const btn = document.getElementById('btnAnalyze');
   if(btn){
     btn.addEventListener('click', async ()=>{
       const desc = document.getElementById('foodDesc').value.trim();
-      const manual = document.getElementById('manualToggle').checked;
       if(!desc){
         STATE.analyzeError = 'Add a description first.';
         renderAnalyzeArea(); return;
-      }
-      if(manual){
-        STATE.analyzeResult = { items:[{name: desc || 'Manual entry', quantity:'', calories:0, protein_g:0, carbs_g:0, fat_g:0}], total:{calories:0, protein_g:0, carbs_g:0, fat_g:0} };
-        STATE.analyzeError = null;
-        renderAnalyzeArea();
-        return;
       }
       STATE.analyzeLoading = true; STATE.analyzeError = null; STATE.analyzeResult = null;
       renderAnalyzeArea();
